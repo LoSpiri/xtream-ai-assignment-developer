@@ -1,0 +1,48 @@
+{
+    "data": {
+        "name": "diamonds",
+        "source": {
+            "getLocal": true,
+            "url": "https://raw.githubusercontent.com/xtreamsrl/xtream-ai-assignment-engineer/main/datasets/diamonds/diamonds.csv",
+            "localPath": "diamonds.csv"
+        },
+        "cleaning": {
+            "dropColumns": {
+                "enabled": true,
+                "columns": ["Unnamed: 0", "test"]
+            },
+            "dropDuplicates": true,
+            "dropNa": true,
+            "dropCustom": {
+                "enabled": true,
+                "columns": {
+                    "price": {
+                        "min": 0,
+                        "max": 100000000000
+                    },
+                    "x": {
+                        "min": 0,
+                        "max": 0
+                    },
+                    "y": {
+                        "min": 0,
+                        "max": 0
+                    },
+                    "z": {
+                        "min": 0,
+                        "max": 0
+                    }
+                }
+            }
+        },
+        "exploration": {
+            "scatter_matrix": {
+                "enabled": true,
+                "dtype": "numeric"
+            },
+            "hist": {
+                "enabled": true
+            }
+        }
+    }
+}
