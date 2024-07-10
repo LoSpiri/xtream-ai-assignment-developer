@@ -36,12 +36,21 @@
             }
         },
         "exploration": {
+            "figsize": {
+                "width": 14,
+                "height": 10
+            },
             "scatter_matrix": {
                 "enabled": true,
                 "dtype": "numeric"
             },
             "hist": {
-                "enabled": true
+                "enabled": true,
+                "bins": 100
+            },
+            "categorical": {
+                "enabled": true,
+                "columns": ["cut", "color", "clarity"]
             }
         }
     }

@@ -2,7 +2,7 @@ import time
 import io
 from logging import Logger
 from pathlib import Path
-from typing import List, Tuple
+from typing import Tuple
 from matplotlib import pyplot as plt
 import pandas as pd
 from pandas.plotting import scatter_matrix
@@ -94,7 +94,6 @@ class ModelTrainer:
         self._data_exploration(dataset=dataset)
 
 
-
         target = ConfigParser.get_value(self.configuration, ["data", "target"])
         features = ConfigParser.get_value(self.configuration, ["data", "features"])
         x = dataset[features]
@@ -129,10 +128,19 @@ class ModelTrainer:
     
     def _data_exploration(self, dataset: pd.DataFrame) -> None:
         self.logger.info("Exploring data...")
+        figsize = (
+            ConfigParser.get_value(self.configuration, ["data", "exploration", "figsize", "width"]),
+            ConfigParser.get_value(self.configuration, ["data", "exploration", "figsize", "height"])
+        )
         # Get statistics
-        if ConfigParser.get_value(self.configuration, ["data", "exploration", "scatter_matrix"]):
-            scatter_matrix(dataset.select_dtypes(include=['number']), figsize=(14, 10))
-            plt.savefig(f'scatter_matrix_{self.model_id}.png')
+        if ConfigParser.get_value(self.configuration, ["data", "exploration", "scatter_matrix", "enabled"]):
+            scatter_matrix(dataset.select_dtypes(include=['number']), figsize=figsize)
+            plt.savefig(self.model_epoch_folder.joinpath("scatter_matrix.png"))
+            plt.close()
+        if ConfigParser.get_value(self.configuration, ["data", "exploration", "hist", "enabled"]):
+            bins = ConfigParser.get_value(self.configuration, ["data", "exploration", "hist", "bins"])
+            dataset.hist(bins=bins, figsize=figsize)
+            plt.savefig(self.model_epoch_folder.joinpath("hist.png"))
             plt.close()
 
 

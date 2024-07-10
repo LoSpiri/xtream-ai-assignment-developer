@@ -1,6 +1,6 @@
 from pathlib import Path
 
-#TODO
+# TODO
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_FOLDER = ROOT.joinpath("config")
 DATA_FOLDER = ROOT.joinpath("data")
