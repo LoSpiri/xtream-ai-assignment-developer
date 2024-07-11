@@ -41,8 +41,7 @@
                 "height": 10
             },
             "scatter_matrix": {
-                "enabled": true,
-                "dtype": "numeric"
+                "enabled": true
             },
             "hist": {
                 "enabled": true,
@@ -52,6 +51,31 @@
                 "enabled": true,
                 "columns": ["cut", "color", "clarity"]
             }
+        },
+        "processing": {
+            "dropColumnsPostExploration": {
+                "enabled": true,
+                "columns": ["depth", "table", "y", "z"]
+            },
+            "getDummies": {
+                "enabled": true,
+                "columns": ["cut", "color", "clarity"]
+            },
+            "trainTestSplit": {
+                "target": ["price"],
+                "testSize": 0.2,
+                "randomState": 42
+            }
+        }
+    },
+    "model": {
+        "enabled": false,
+        "type": "linear_regression",
+        "hyperparameters": {
+            "fit_intercept": true,
+            "normalize": false,
+            "copy_X": true,
+            "n_jobs": null
         }
     }
 }

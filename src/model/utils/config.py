@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from typing import Any, List
 
-from const.path import CONFIG_FOLDER
+from src.const.path import CONFIG_FOLDER
 
 DEFAULT_CONFIG = CONFIG_FOLDER.joinpath("default.json")
 
@@ -19,11 +19,11 @@ class ConfigParser:
             try:
                 with open(file_path) as f:
                     configuration = json.load(f)
+                    return configuration
             except json.JSONDecodeError as e:
                 raise json.JSONDecodeError("Error decoding JSON") from e
             except PermissionError as e:
                 raise PermissionError("Permission denied") from e
-        return configuration
 
     @staticmethod
     def get_value(config: dict, key: List[str]) -> Any:
