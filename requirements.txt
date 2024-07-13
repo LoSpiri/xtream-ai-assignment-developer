@@ -4,3 +4,4 @@ plotply
 scikit-learn
 xgboost
 optuna
+kaleido

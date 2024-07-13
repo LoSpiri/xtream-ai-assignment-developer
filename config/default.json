@@ -18,19 +18,20 @@
                 "columns": {
                     "price": {
                         "min": 0,
-                        "max": 100000000000
+                        "max": 100000000000,
+                        "rangeOrEqual": true
                     },
                     "x": {
-                        "min": 0,
-                        "max": 0
+                        "value": 0,
+                        "rangeOrEqual": false
                     },
                     "y": {
-                        "min": 0,
-                        "max": 0
+                        "value": 0,
+                        "rangeOrEqual": false
                     },
                     "z": {
-                        "min": 0,
-                        "max": 0
+                        "value": 0,
+                        "rangeOrEqual": false
                     }
                 }
             }

@@ -62,6 +62,7 @@ class DataPreparation:
     ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
         self.logger.info("Preparing data for training...")
         dataset = self._data_cleaning(dataset=dataset)
+        self.logger.info(dataset.head())
         self._data_exploration(dataset=dataset)
         return self._data_processing(dataset=dataset)
 
@@ -69,31 +70,37 @@ class DataPreparation:
         self.logger.info("Cleaning data...")
         # Drop duplicates
         if ConfigParser.get_value(
-            self.configuration, ["data", "clean", "dropDuplicates"]
+            self.configuration, ["data", "cleaning", "dropDuplicates"]
         ):
             dataset.drop_duplicates(inplace=True)
         # Drop missing values
-        if ConfigParser.get_value(self.configuration, ["data", "clean", "dropNa"]):
+        if ConfigParser.get_value(self.configuration, ["data", "cleaning", "dropNa"]):
             dataset.dropna(inplace=True)
         # Drop columns
         if ConfigParser.get_value(
-            self.configuration, ["data", "clean", "dropColumns", "enabled"]
+            self.configuration, ["data", "cleaning", "dropColumns", "enabled"]
         ):
             columns = ConfigParser.get_value(
-                self.configuration, ["data", "clean", "dropColumns", "columns"]
+                self.configuration, ["data", "cleaning", "dropColumns", "columns"]
             )
-            dataset.drop(columns=columns, inplace=True)
+            dataset.drop(columns=columns, inplace=True, errors="ignore")
+
+        self.logger.info(dataset.head())
         # Drop columns custom condition
         if ConfigParser.get_value(
-            self.configuration, ["data", "clean", "dropColumnsCustom", "enabled"]
+            self.configuration, ["data", "cleaning", "dropCustom", "enabled"]
         ):
             for column, bounds in ConfigParser.get_value(
-                self.configuration, ["data", "clean", "dropColumnsCustom"]
+                self.configuration, ["data", "cleaning", "dropCustom", "columns"]
             ).items():
-                min_value = bounds["min"]
-                max_value = bounds["max"]
-                dataset = dataset[dataset[column] >= min_value]
-                dataset = dataset[dataset[column] < max_value]
+                if bounds["rangeOrEqual"]:
+                    min_value = bounds["min"]
+                    max_value = bounds["max"]
+                    dataset = dataset[dataset[column] >= min_value]
+                    dataset = dataset[dataset[column] < max_value]
+                else:
+                    value = bounds["value"]
+                    dataset = dataset[dataset[column] != value]
         self.logger.info("Data cleaned successfully")
         return dataset
 
@@ -156,9 +163,9 @@ class DataPreparation:
             ["data", "processing", "dropColumnsPostExploration", "enabled"],
         ):
             columns = ConfigParser.get_value(
-                self.configuration, ["data", "processing", "dropColumns", "columns"]
+                self.configuration, ["data", "processing", "dropColumnsPostExploration", "columns"]
             )
-            dataset.drop(columns=columns, inplace=True)
+            dataset.drop(columns=columns, inplace=True, errors="ignore")
         # Get dummies
         if ConfigParser.get_value(
             self.configuration, ["data", "processing", "getDummies", "enabled"]
