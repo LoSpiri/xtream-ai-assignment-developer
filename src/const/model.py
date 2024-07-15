@@ -1,8 +1,13 @@
 from sklearn.linear_model import LinearRegression
-from xgboost import XGBRegressor
+import xgboost
 
 
-MODELS = {
-    "linear_regression": LinearRegression,
-    "xgb_regression": XGBRegressor,
-}
+class ModelFactory:
+    @staticmethod
+    def create_model(model_type, **kwargs):
+        if model_type == "linear_regression":
+            return LinearRegression(**kwargs)
+        elif model_type == "xgb_regression":
+            return xgboost.XGBRegressor(**kwargs)
+        else:
+            raise ValueError(f"Unknown model type: {model_type}")

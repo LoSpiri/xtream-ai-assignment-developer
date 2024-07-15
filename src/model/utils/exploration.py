@@ -31,3 +31,12 @@ class ExplorationUtils:
         fig = px.scatter(df, x='carat', y='price', color=column, title=f'Price vs carat with {column}')
         fig.write_image(str(path))
         del fig
+
+    @staticmethod
+    def plot_gof(y_test, pred, path: Path):
+        plt.plot(y_test, pred, '.')
+        plt.plot(y_test, y_test, linewidth=3, c='black')
+        plt.xlabel('Actual')
+        plt.ylabel('Predicted')
+        plt.savefig(path)
+        plt.close()

@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 from src.const.path import DATA_FOLDER, TRAIN_FOLDER
 from src.model.utils.config import ConfigParser
 from src.model.utils.exploration import ExplorationUtils
-from src.model.utils.load_dataset import LoadUtils
+from src.model.utils.load_config import LoadUtils
 
 
 class DataPreparation:
@@ -48,7 +48,7 @@ class DataPreparation:
             source_path = DATA_FOLDER.joinpath(source_path)
         else:
             source_path = ConfigParser.get_value(
-                config=self.configuration, key=["data", "source", "urlPath"]
+                config=self.configuration, key=["data", "source", "url"]
             )
         self.logger.info(f"Selected config file is: '{source_path}'")
         if getLocal:
@@ -84,8 +84,6 @@ class DataPreparation:
                 self.configuration, ["data", "cleaning", "dropColumns", "columns"]
             )
             dataset.drop(columns=columns, inplace=True, errors="ignore")
-
-        self.logger.info(dataset.head())
         # Drop columns custom condition
         if ConfigParser.get_value(
             self.configuration, ["data", "cleaning", "dropCustom", "enabled"]
@@ -106,6 +104,8 @@ class DataPreparation:
 
     def _data_exploration(self, dataset: pd.DataFrame) -> None:
         self.logger.info("Exploring data...")
+        # TODO: Spostare gli accessi alle configurazioni nei metodi di ExplorationUtils
+        # TODO: Mettere i tipi di plot in una const come metric e model e iterare
         figsize = (
             ConfigParser.get_value(
                 self.configuration, ["data", "exploration", "figsize", "width"]
@@ -163,7 +163,8 @@ class DataPreparation:
             ["data", "processing", "dropColumnsPostExploration", "enabled"],
         ):
             columns = ConfigParser.get_value(
-                self.configuration, ["data", "processing", "dropColumnsPostExploration", "columns"]
+                self.configuration,
+                ["data", "processing", "dropColumnsPostExploration", "columns"],
             )
             dataset.drop(columns=columns, inplace=True, errors="ignore")
         # Get dummies
@@ -173,7 +174,41 @@ class DataPreparation:
             columns = ConfigParser.get_value(
                 self.configuration, ["data", "processing", "getDummies", "columns"]
             )
-            dataset = pd.get_dummies(dataset, columns=columns, drop_first=True)
+            for column in columns:
+                if not (
+                    ConfigParser.get_value(
+                        self.configuration,
+                        ["data", "processing", "orderCategorical", "enabled"],
+                    )
+                    and column
+                    in ConfigParser.get_value(
+                        self.configuration,
+                        ["data", "processing", "orderCategorical", "columns"],
+                    )
+                ):
+                    dataset = pd.get_dummies(dataset, columns=[column], drop_first=True)
+        # Order categorical attibutes
+        if ConfigParser.get_value(
+            self.configuration, ["data", "processing", "orderCategorical", "enabled"]
+        ):
+            for column, categories in ConfigParser.get_value(
+                self.configuration,
+                ["data", "processing", "orderCategorical", "columns"],
+            ).items():
+                if not (
+                    ConfigParser.get_value(
+                        self.configuration,
+                        ["data", "processing", "getDummies", "enabled"],
+                    )
+                    and column
+                    in ConfigParser.get_value(
+                        self.configuration,
+                        ["data", "processing", "getDummies", "columns"],
+                    )
+                ):
+                    dataset[column] = pd.Categorical(
+                        dataset[column], categories=categories, ordered=True
+                    )
         # Split data
         target = ConfigParser.get_value(
             self.configuration, ["data", "processing", "trainTestSplit", "target"]

@@ -11,10 +11,9 @@ if __name__ == "__main__":
         "-c",
         "--config_file",
         type=Path,
-        default=CONFIG_FOLDER.joinpath("default.json"),
+        default="default.json",
         help="Path to the configuration file. Default is 'default.json' in the 'config' folder.",
     )
-
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -24,15 +23,16 @@ if __name__ == "__main__":
             logging.StreamHandler()  # Output logs to the console
         ]
     )
-    # Create a logger object
     logger = logging.getLogger(__name__)
 
     # TODO: Add logging
     # logger = Logger(name="Model Training")
 
     logger.info(args.config_file)
+    config_file = CONFIG_FOLDER.joinpath(args.config_file)
+    # Check model_name here what it does
     model_trainer = ModelTrainer(
-        config_file=args.config_file, logger=logger, model_name="test"
+        config_file=config_file, logger=logger
     )
     model_trainer.run()
     logger.info("Model training completed successfully")

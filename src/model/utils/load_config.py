@@ -1,5 +1,6 @@
 import io
 from pathlib import Path
+import optuna
 import pandas as pd
 from logging import Logger
 import requests
@@ -38,3 +39,22 @@ class LoadUtils:
             logger.error(f"Failed to read data from path: {path}. Got error: {e}")
             raise
         return data
+
+    @staticmethod
+    def load_hyperparams(trial: optuna.trial.Trial, model_name: str, model_constant_params: dict, hyperparams: dict, logger: Logger) -> dict:
+        # Define hyperparameters to tune using trial.suggest_* methods directly
+        param = {}
+        for param_name, param_info in hyperparams.items():
+            if 'cat' in param_info:
+                param[param_name] = trial.suggest_categorical(param_name, param_info['cat'])
+            elif 'range' in param_info:
+                if param_info['log']:
+                    param[param_name] = trial.suggest_float(param_name, param_info['range'][0], param_info['range'][1], log=True)
+                else:
+                    if isinstance(param_info['range'][0], int) and isinstance(param_info['range'][1], int):
+                        param[param_name] = trial.suggest_int(param_name, param_info['range'][0], param_info['range'][1])
+                    else:
+                        param[param_name] = trial.suggest_float(param_name, param_info['range'][0], param_info['range'][1])
+        param.update(model_constant_params)
+        logger.info(f"Final hyperparameters for {model_name}: {param}")
+        return param

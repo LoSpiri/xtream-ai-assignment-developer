@@ -55,15 +55,15 @@
         },
         "processing": {
             "dropColumnsPostExploration": {
-                "enabled": true,
+                "enabled": false,
                 "columns": ["depth", "table", "y", "z"]
             },
             "getDummies": {
-                "enabled": true,
+                "enabled": false,
                 "columns": ["cut", "color", "clarity"]
             },
             "orderCategorical": {
-                "enabled": false,
+                "enabled": true,
                 "columns": {
                     "cut": ["Fair", "Good", "Very Good", "Ideal", "Premium"],
                     "color": ["D", "E", "F", "G", "H", "I", "J"],
@@ -79,8 +79,11 @@
     },
     "model": {
         "enabled": true,
-        "type": "linear_regression",
-        "parameters": {},
+        "type": "xgb_regression",
+        "parameters": {
+            "enable_categorical": true,
+            "random_state": 42
+        },
         "evaluation": {
             "enabled": true,
             "metrics": ["r2_score", "mean_absolute_error"]
@@ -97,6 +100,46 @@
         "transformation": {
             "enabled": true,
             "func": ["log"]
+        },
+        "optuna_tuning": {
+            "enabled": true,
+            "metric": "mean_absolute_error",
+            "nTrials": 100,
+            "direction": "minimize",
+            "hyperparameters": {
+                "n_estimators": {
+                    "cat": [100, 1000],
+                    "log": false
+                },
+                "lambda": {
+                    "range": [1e-8, 1.0],
+                    "log": true
+                },
+                "alpha": {
+                    "range": [1e-8, 1.0],
+                    "log": true
+                },
+                "colsample_bytree": {
+                    "cat": [0.3, 0.4, 0.5, 0.7],
+                    "log": false
+                },
+                "subsample": {
+                    "cat": [0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+                    "log": false
+                },
+                "learning_rate": {
+                    "range": [1e-8, 1.0],
+                    "log": true
+                },
+                "max_depth": {
+                    "range": [3, 9],
+                    "log": false
+                },
+                "min_child_weight": {
+                    "range": [1, 10],
+                    "log": false
+                }
+            }
         }
     }
 }
