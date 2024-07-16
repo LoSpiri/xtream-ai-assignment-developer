@@ -65,14 +65,20 @@ class ModelTrainer:
             metrics = ConfigParser.get_value(
                 self.configuration, ["model", "evaluation", "metrics"]
             )
+            saved_metrics = {}
             for metric in metrics:
                 if metric not in METRICS:
                     self.logger.error(f"Metric {metric} not found in METRICS constant")
                 else:
                     value = round(METRICS[metric](self.y_test, self.pred), 4)
+                    saved_metrics[metric] = value
                     self.logger.info(f"{metric}: {value}")
-        # TODO: self._save_metrics()
+        self._save_metrics(saved_metrics)
         self.logger.info("Metrics generation completed successfully")
+
+    def _save_metrics(self, metrics: dict) -> None:
+        self.configuration.setdefault("evaluation", {})
+        self.configuration["evaluation"]["metrics"] = metrics
 
     def _save_model(self) -> None:
         if ConfigParser.get_value(self.configuration, ["model", "save", "enabled"]):

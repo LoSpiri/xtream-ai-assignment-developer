@@ -36,3 +36,6 @@ Content-Type: application/json
     "z": 4.11,
     "n": 5
 }
+
+###
+GET {{BASE_URL}}/interactions

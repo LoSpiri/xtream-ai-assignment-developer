@@ -4,22 +4,43 @@ from logging import Logger
 import joblib
 import numpy as np
 
+from src.const.path import TRAIN_FOLDER
 from src.model.model_trainer import ModelTrainer
 from src.utils.config import ConfigParser
 from src.utils.server import ServerUtils
 
 
 class ModelDeploy:
-    def __init__(self, model_folder_path: Path, logger: Logger) -> None:
-        self.model_folder_path = model_folder_path
-        self.config_file = model_folder_path.joinpath("config.json")
-        self.configuration = ConfigParser.retrieve_config(self.config_file)
+    def __init__(self, config_file: Path, logger: Logger) -> None:
+        self.config_file = config_file
+        self.configuration = ConfigParser.retrieve_config(config_file)
         self.logger = logger
-        self.model = joblib.load(model_folder_path.joinpath("model.pkl"))
-        self.data_processor = ModelTrainer(self.config_file, logger)
 
     def run(self) -> None:
-        pass
+        self.logger.info("Deploying model...")
+        self.data_processor = ModelTrainer(
+            config_file=self.config_file, logger=self.logger
+        )
+        if ConfigParser.get_value(
+            self.configuration, ["deploy", "model_name", "trainOnTheSpot"]
+        ):
+            self.data_processor.run()
+            self.model = joblib.load(
+                self.data_processor.model_epoch_folder.joinpath("model.pkl")
+            )
+        else:
+            self.model = joblib.load(
+                TRAIN_FOLDER.joinpath(
+                    ConfigParser.get_value(self.configuration, ["data", "name"])
+                )
+                .joinpath(
+                    ConfigParser.get_value(
+                        self.configuration, ["deploy", "model_name", "epoch"]
+                    )
+                )
+                .joinpath("model.pkl")
+            )
+        self.logger.info("Model deployed successfully")
 
     def predict_price(self, payload: dict) -> dict:
         self.logger.info(f"Making prediction with data: {payload}")
@@ -56,4 +77,8 @@ class ModelDeploy:
         ]
         dataset["similarity"] = np.abs(dataset["carat"] - data["carat"])
         number_of_similar_diamonds = payload.get("n", 5)
-        return dataset.sort_values(by="Similarity").head(number_of_similar_diamonds).to_dict()
+        return (
+            dataset.sort_values(by="similarity")
+            .head(number_of_similar_diamonds)
+            .to_dict()
+        )

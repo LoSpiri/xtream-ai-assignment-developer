@@ -40,9 +40,6 @@ class DataPreparation:
         return x_train, x_test, y_train, y_test
 
     def _setup(self) -> None:
-        # TODO: remove this line
-        self.logger.info(self.configuration)
-
         current_unix_epoch = int(time.time())
         model_name = ConfigParser.get_value(self.configuration, ["data", "name"])
         model_id = f"{model_name}_{current_unix_epoch}"

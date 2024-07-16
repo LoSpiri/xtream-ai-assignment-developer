@@ -145,6 +145,7 @@
     "deploy": {
         "enabled": true,
         "model_name": {
+            "trainOnTheSpot": true,
             "sameAsTraining": true,
             "epoch": "1721058558"
         }
