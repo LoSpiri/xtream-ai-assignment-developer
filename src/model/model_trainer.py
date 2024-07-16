@@ -1,42 +1,36 @@
 import functools
+import json
 from logging import Logger
 from pathlib import Path
 import time
 
 import joblib
 import optuna
+import pandas as pd
 
-from src.model.utils.optuna_objective import OptunaUtils
+from src.utils.optuna_objective import OptunaUtils
 from src.const.transformation import TRANSFORMATIONS
-from src.model.utils.exploration import ExplorationUtils
+from src.utils.exploration import ExplorationUtils
 from src.const.metric import METRICS
 from src.const.model import ModelFactory
 from src.model.data_preparation import DataPreparation
-from src.model.utils.config import ConfigParser
+from src.utils.config import ConfigParser
 
 
 class ModelTrainer:
     def __init__(self, config_file: Path, logger: Logger) -> None:
         self.configuration = ConfigParser.retrieve_config(config_file)
         self.logger = logger
-        data = DataPreparation(config_file=config_file, logger=self.logger)
-        self.x_train, self.x_test, self.y_train, self.y_test = data.run()
-        self.model_epoch_folder = data.model_epoch_folder
-        self.logger.info(self.x_train.head())
-        self.logger.info(self.x_test.head())
-        self.logger.info(self.y_train.head())
-        self.logger.info(self.y_test.head())
-        self.logger.info(self.x_train.info())
-        self.logger.info(self.x_test.info())
-        self.logger.info(self.y_train.info())
-        self.logger.info(self.y_test.info())
+        self.data = DataPreparation(config_file=config_file, logger=self.logger)
+        self.x_train, self.x_test, self.y_train, self.y_test = self.data.run()
+        self.model_epoch_folder = self.data.model_epoch_folder
 
     def run(self) -> None:
         if ConfigParser.get_value(self.configuration, ["model", "enabled"]):
             self.logger.info("Training model...")
-            self._transformation()
+            self.y_train = self.transformation(self.y_train)
             self._train()
-            self._inverse_transformation()
+            self.pred = self.inverse_transformation(self.pred)
             self._metrics_generation()
             self._model_exploration()
             self._save_model()
@@ -54,8 +48,8 @@ class ModelTrainer:
         if ConfigParser.get_value(
             self.configuration, ["model", "optuna_tuning", "enabled"]
         ):
-            model_best_params = self._tuning(model_name, model_params)
-        self.model = ModelFactory.create_model(model_name, **model_best_params)
+            model_params = self._tuning(model_name, model_params)
+        self.model = ModelFactory.create_model(model_name, **model_params)
         start_time = time.time()
         self.model.fit(self.x_train, self.y_train)
         end_time = time.time()
@@ -89,6 +83,8 @@ class ModelTrainer:
                 )
             )
             joblib.dump(self.model, model_path)
+            with open(self.model_epoch_folder.joinpath("config.json"), 'w') as json_file:
+                json.dump(self.configuration, json_file, indent=4)
             self.logger.info("Model saved successfully")
 
     def _model_exploration(self) -> None:
@@ -100,7 +96,7 @@ class ModelTrainer:
                 self.y_test, self.pred, self.model_epoch_folder.joinpath("gof.png")
             )
 
-    def _transformation(self) -> None:
+    def transformation(self, data) -> None:
         if ConfigParser.get_value(
             self.configuration, ["model", "transformation", "enabled"]
         ):
@@ -113,9 +109,11 @@ class ModelTrainer:
                         f"Transformation {transformation} not found in TRANSFORMATIONS constant"
                     )
                 else:
-                    self.y_train = TRANSFORMATIONS[transformation]["func"](self.y_train)
+                    return TRANSFORMATIONS[transformation]["func"](data)
+        else:
+            return data
 
-    def _inverse_transformation(self) -> None:
+    def inverse_transformation(self, data) -> None:
         if ConfigParser.get_value(
             self.configuration, ["model", "transformation", "enabled"]
         ):
@@ -128,9 +126,11 @@ class ModelTrainer:
                         f"Transformation {transformation} not found in TRANSFORMATIONS constant"
                     )
                 else:
-                    self.pred = TRANSFORMATIONS[transformation]["inverse_func"](
-                        self.pred
+                    return TRANSFORMATIONS[transformation]["inverse_func"](
+                        data
                     )
+        else:
+            return data
 
     def _tuning(self, model_name: str, model_params: dict) -> dict:
         self.logger.info("Tuning model...")
@@ -160,7 +160,6 @@ class ModelTrainer:
             hyperparams=hyperparams,
             logger=self.logger,
         )
-        self.logger.info("LS DEBUG: Starting Optuna study...")
         study = optuna.create_study(
             direction=ConfigParser.get_value(
                 self.configuration, ["model", "optuna_tuning", "direction"]
@@ -178,6 +177,7 @@ class ModelTrainer:
         return best_params
     
     def _objective(
+        self,
         trial: optuna.trial.Trial,
         x_train_og,
         y_train_og,

@@ -5,3 +5,5 @@ scikit-learn
 xgboost
 optuna
 kaleido
+joblib
+flask

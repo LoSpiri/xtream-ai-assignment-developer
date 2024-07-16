@@ -1,9 +1,11 @@
 from pathlib import Path
 from typing import Tuple
+import matplotlib
 import pandas as pd
 import plotly.express as px
 from pandas.plotting import scatter_matrix
 import matplotlib.pyplot as plt
+matplotlib.use('Agg')
 
 
 class ExplorationUtils:

@@ -102,7 +102,7 @@
             "func": ["log"]
         },
         "optuna_tuning": {
-            "enabled": true,
+            "enabled": false,
             "metric": "mean_absolute_error",
             "nTrials": 100,
             "direction": "minimize",
@@ -140,6 +140,13 @@
                     "log": false
                 }
             }
+        }
+    },
+    "deploy": {
+        "enabled": true,
+        "model_name": {
+            "sameAsTraining": true,
+            "epoch": "1721058558"
         }
     }
 }

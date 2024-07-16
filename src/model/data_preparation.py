@@ -6,9 +6,9 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 
 from src.const.path import DATA_FOLDER, TRAIN_FOLDER
-from src.model.utils.config import ConfigParser
-from src.model.utils.exploration import ExplorationUtils
-from src.model.utils.load_config import LoadUtils
+from src.utils.config import ConfigParser
+from src.utils.exploration import ExplorationUtils
+from src.utils.load_config import LoadUtils
 
 
 class DataPreparation:
@@ -19,8 +19,23 @@ class DataPreparation:
     def run(self) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
         self.logger.info("Initializing data preparation...")
         self._setup()
-        dataset = self._get_dataset()
-        x_train, x_test, y_train, y_test = self._data_preparation(dataset=dataset)
+        dataset = self.get_dataset()
+        dataset = self.data_preparation(dataset=dataset)
+        # Split data
+        target = ConfigParser.get_value(
+            self.configuration, ["data", "processing", "trainTestSplit", "target"]
+        )
+        x = dataset.drop(columns=target)
+        y = dataset[target]
+        test_size = ConfigParser.get_value(
+            self.configuration, ["data", "processing", "trainTestSplit", "testSize"]
+        )
+        random_state = ConfigParser.get_value(
+            self.configuration, ["data", "processing", "trainTestSplit", "randomState"]
+        )
+        x_train, x_test, y_train, y_test = train_test_split(
+            x, y, test_size=test_size, random_state=random_state
+        )
         self.logger.info("Data preparation completed successfully")
         return x_train, x_test, y_train, y_test
 
@@ -37,7 +52,7 @@ class DataPreparation:
         self.logger.info(f"Model ID: {model_id}")
         self.model_epoch_folder.mkdir(parents=True, exist_ok=True)
 
-    def _get_dataset(self) -> pd.DataFrame:
+    def get_dataset(self) -> pd.DataFrame:
         getLocal = ConfigParser.get_value(
             config=self.configuration, key=["data", "source", "getLocal"]
         )
@@ -57,13 +72,13 @@ class DataPreparation:
             data = LoadUtils.load_url(url=str(source_path), logger=self.logger)
         return data
 
-    def _data_preparation(
-        self, dataset: pd.DataFrame
-    ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
+    def data_preparation(
+        self, dataset: pd.DataFrame, exploration: bool = True
+    ) -> pd.DataFrame:
         self.logger.info("Preparing data for training...")
         dataset = self._data_cleaning(dataset=dataset)
-        self.logger.info(dataset.head())
-        self._data_exploration(dataset=dataset)
+        if exploration:
+            self._data_exploration(dataset=dataset)
         return self._data_processing(dataset=dataset)
 
     def _data_cleaning(self, dataset: pd.DataFrame) -> pd.DataFrame:
@@ -155,7 +170,7 @@ class DataPreparation:
 
     def _data_processing(
         self, dataset: pd.DataFrame
-    ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
+    ) -> pd.DataFrame:
         self.logger.info("Processing data...")
         # Drop columns
         if ConfigParser.get_value(
@@ -174,7 +189,7 @@ class DataPreparation:
             columns = ConfigParser.get_value(
                 self.configuration, ["data", "processing", "getDummies", "columns"]
             )
-            for column in columns:
+            for column, categories in columns.items():
                 if not (
                     ConfigParser.get_value(
                         self.configuration,
@@ -186,6 +201,7 @@ class DataPreparation:
                         ["data", "processing", "orderCategorical", "columns"],
                     )
                 ):
+                    dataset[column] = pd.Categorical(dataset[column], categories=categories)
                     dataset = pd.get_dummies(dataset, columns=[column], drop_first=True)
         # Order categorical attibutes
         if ConfigParser.get_value(
@@ -209,20 +225,5 @@ class DataPreparation:
                     dataset[column] = pd.Categorical(
                         dataset[column], categories=categories, ordered=True
                     )
-        # Split data
-        target = ConfigParser.get_value(
-            self.configuration, ["data", "processing", "trainTestSplit", "target"]
-        )
-        x = dataset.drop(columns=target)
-        y = dataset[target]
-        test_size = ConfigParser.get_value(
-            self.configuration, ["data", "processing", "trainTestSplit", "testSize"]
-        )
-        random_state = ConfigParser.get_value(
-            self.configuration, ["data", "processing", "trainTestSplit", "randomState"]
-        )
-        x_train, x_test, y_train, y_test = train_test_split(
-            x, y, test_size=test_size, random_state=random_state
-        )
         self.logger.info("Data processed successfully")
-        return x_train, x_test, y_train, y_test
+        return dataset

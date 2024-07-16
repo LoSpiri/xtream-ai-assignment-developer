@@ -3,7 +3,7 @@ import optuna
 from sklearn.model_selection import train_test_split
 
 from src.const.model import ModelFactory
-from src.model.utils.load_config import LoadUtils
+from src.utils.load_config import LoadUtils
 
 
 class OptunaUtils:

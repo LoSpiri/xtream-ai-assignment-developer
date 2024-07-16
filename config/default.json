@@ -9,7 +9,10 @@
         "cleaning": {
             "dropColumns": {
                 "enabled": true,
-                "columns": ["Unnamed: 0", "test"]
+                "columns": [
+                    "Unnamed: 0",
+                    "test"
+                ]
             },
             "dropDuplicates": true,
             "dropNa": true,
@@ -50,28 +53,89 @@
             },
             "categorical": {
                 "enabled": false,
-                "columns": ["cut", "color", "clarity"]
+                "columns": [
+                    "cut",
+                    "color",
+                    "clarity"
+                ]
             }
         },
         "processing": {
             "dropColumnsPostExploration": {
                 "enabled": true,
-                "columns": ["depth", "table", "y", "z"]
+                "columns": [
+                    "depth",
+                    "table",
+                    "y",
+                    "z"
+                ]
             },
             "getDummies": {
                 "enabled": true,
-                "columns": ["cut", "color", "clarity"]
+                "columns": {
+                    "cut": [
+                        "Fair",
+                        "Good",
+                        "Very Good",
+                        "Ideal",
+                        "Premium"
+                    ],
+                    "color": [
+                        "D",
+                        "E",
+                        "F",
+                        "G",
+                        "H",
+                        "I",
+                        "J"
+                    ],
+                    "clarity": [
+                        "IF",
+                        "VVS1",
+                        "VVS2",
+                        "VS1",
+                        "VS2",
+                        "SI1",
+                        "SI2",
+                        "I1"
+                    ]
+                }
             },
             "orderCategorical": {
                 "enabled": false,
                 "columns": {
-                    "cut": ["Fair", "Good", "Very Good", "Ideal", "Premium"],
-                    "color": ["D", "E", "F", "G", "H", "I", "J"],
-                    "clarity": ["IF", "VVS1", "VVS2", "VS1", "VS2", "SI1", "SI2", "I1"]
+                    "cut": [
+                        "Fair",
+                        "Good",
+                        "Very Good",
+                        "Ideal",
+                        "Premium"
+                    ],
+                    "color": [
+                        "D",
+                        "E",
+                        "F",
+                        "G",
+                        "H",
+                        "I",
+                        "J"
+                    ],
+                    "clarity": [
+                        "IF",
+                        "VVS1",
+                        "VVS2",
+                        "VS1",
+                        "VS2",
+                        "SI1",
+                        "SI2",
+                        "I1"
+                    ]
                 }
             },
             "trainTestSplit": {
-                "target": ["price"],
+                "target": [
+                    "price"
+                ],
                 "testSize": 0.2,
                 "randomState": 42
             }
@@ -83,7 +147,10 @@
         "parameters": {},
         "evaluation": {
             "enabled": true,
-            "metrics": ["r2_score", "mean_absolute_error"]
+            "metrics": [
+                "r2_score",
+                "mean_absolute_error"
+            ]
         },
         "save": {
             "enabled": true,
@@ -95,8 +162,87 @@
             }
         },
         "transformation": {
-            "enabled": true,
-            "func": ["log"]
+            "enabled": false,
+            "func": [
+                "log"
+            ]
+        },
+        "optuna_tuning": {
+            "enabled": false,
+            "metric": "mean_absolute_error",
+            "nTrials": 100,
+            "direction": "minimize",
+            "hyperparameters": {
+                "n_estimators": {
+                    "cat": [
+                        100,
+                        1000
+                    ],
+                    "log": false
+                },
+                "lambda": {
+                    "range": [
+                        1e-8,
+                        1.0
+                    ],
+                    "log": true
+                },
+                "alpha": {
+                    "range": [
+                        1e-8,
+                        1.0
+                    ],
+                    "log": true
+                },
+                "colsample_bytree": {
+                    "cat": [
+                        0.3,
+                        0.4,
+                        0.5,
+                        0.7
+                    ],
+                    "log": false
+                },
+                "subsample": {
+                    "cat": [
+                        0.5,
+                        0.6,
+                        0.7,
+                        0.8,
+                        0.9,
+                        1.0
+                    ],
+                    "log": false
+                },
+                "learning_rate": {
+                    "range": [
+                        1e-8,
+                        1.0
+                    ],
+                    "log": true
+                },
+                "max_depth": {
+                    "range": [
+                        3,
+                        9
+                    ],
+                    "log": false
+                },
+                "min_child_weight": {
+                    "range": [
+                        1,
+                        10
+                    ],
+                    "log": false
+                }
+            }
+        }
+    },
+    "deploy": {
+        "enabled": true,
+        "model_name": {
+            "sameAsTraining": true,
+            "epoch": "1721058558"
         }
     }
 }
