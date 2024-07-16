@@ -6,5 +6,6 @@ xgboost
 optuna
 kaleido
 joblib
+requests
 flask
 gunicorn

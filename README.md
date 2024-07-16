@@ -68,4 +68,72 @@ Observability is key. Save every request and response made to the APIs to a **pr
 ---
 
 ## How to run
+To train a specific model, simply run the command from the shell:
+```shell
+python main.py [options]
+```
+where options are:
+* `-c`, `--config_file`: Path to the configuration file to be used. There are present one for LinearRegression (`default.json`) and one for `XGBoost`. Default is `./config/default.json`.
 
+### Configuration file
+The configuration files are the central part of the project. They outline all the choices and combinations that can be made to the pipeline.\
+From there it's possible to include or exclude each part of the pipeline, making it possible to adjust the execution on the fly. This way it's possible to first disable the deploy and model training and just concentrate on the data preparation, controlling each step separately and having the possibility of finding many possible graphs saved inside the `train` folder, that contains a subfolder for each run, marked using the epoch as the id, making it possible to also have all the trainings ordered.
+
+
+Although the configuration file tries to be as self-explanatory as possible, let's explain the main sections briefly.
+- `data`: This first sections focuses on the data preparations part. It contains the `name` of the model, whether we want to retrieve the dataset from local or from an url and then various subsections for all the steps required to properly prepare the dataset.
+    - `cleaning`: For data cleaning.
+        - `dropColumns`: To drop specific columns.
+        - `dropDuplicates`
+        - `dropNa`
+        - `dropCustom`: To define specific conditions to drop columns. If `rangeOrEqual` is `true` it searches for `min` and `max`, otherwise for `value`.
+    - `exploration`: For data exploration, it's possible to define which figures we want to create. Last subsection `categorical` controls both violin plots and scatter plots by price.
+    - `processing`: For processing the data based on the model we want to train. `default.json` and `xgb.json`, for example, use 2 different model and so need different processing steps.
+- `model`: This section controls whether we want to train the model or not and has various subsections to controls the `evaluation` metrics, whether we want to save the model locally, if we want to produce a god figure, transform data and if we want to optimize the hyperparameters.
+- `deploy`: Lastly the section that controls the deploy. From here it's possible to decide whether to deploy a Flask server or not and if we want to use a previously saved model or to train it right before deploying it. This is based on `trainOnTheSpot`.
+
+
+
+## API
+As prewviously said the API is available based on the configuration file settings. It is based on Flask and the project features a `request.http` file to be used in conjunction with Rest Client VS code extension.\
+Following are the endpoints:
+
+#### `POST /predict`
+This predicts the value of a diamond based on its features. It takes as parameters:
+* **carat**: [*float*]
+* **cut**: [*string*]
+* **color**: [*string*]
+* **clarity**: [*string*]
+* **depth**: [*float*]
+* **table**: [*float*]
+* **x**: [*float*]
+* **y**: [*float*]
+* **z**: [*float*]
+
+#### POST `/similar`
+This finds `n` entries in the dataset with the same cut, colour and clarity, and with the most similar weight.
+
+Its parameters are:
+* **n** [*integer*] The number of entries to be returned.
+* **carat** [*float*] 
+* **cut** [*string*]
+* **color** [*string*]
+* **clarity** [*string*]
+
+#### GET `/interactions`
+This returns the content of the database, to make it easier to consult it.
+
+#### GET `/health`
+Just to chech whether the server is up. Returns `Hello, Flask!`
+
+
+## Train folder
+The train folder contains all that is produced. Its structured based on subfolders, one for each iteration, marked by the epoch at the time of creation. This is better than using as UUID because it is possible to order them based on time.\
+Each subfolder contains:
+- The `config.json` file used at the time of creation **enriched with the metrics** produced during the training.
+- The `model.pkl` file if the model was saved locally.
+- Various `graphs` based on the ones that were chosen in the configuration.
+
+## Conclusion
+The project was really fun to work on.\
+Would have loved to make many more improvements and I would be happy to discuss them and why I did not make them in the next interview if you please.

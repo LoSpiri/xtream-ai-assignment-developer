@@ -20,6 +20,7 @@ def home():
 @app.route('/predictprice', methods=['POST'])
 def predict_price():
     try:
+        # TODO: Check if the request is valid
         payload = request.get_json()
         result = g.model_deployer.predict_price(payload)
     except Exception as e:

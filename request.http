@@ -28,13 +28,7 @@ Content-Type: application/json
     "carat": 1.1,
     "cut": "Ideal",
     "color": "H",
-    "clarity": "SI2",
-    "depth": 62.0,
-    "table": 55.0,
-    "x": 6.61,
-    "y": 6.65,
-    "z": 4.11,
-    "n": 5
+    "clarity": "SI2"
 }
 
 ###
