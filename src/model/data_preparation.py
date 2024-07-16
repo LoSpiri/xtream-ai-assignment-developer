@@ -116,8 +116,6 @@ class DataPreparation:
 
     def _data_exploration(self, dataset: pd.DataFrame) -> None:
         self.logger.info("Exploring data...")
-        # TODO: Spostare gli accessi alle configurazioni nei metodi di ExplorationUtils
-        # TODO: Mettere i tipi di plot in una const come metric e model e iterare
         figsize = (
             ConfigParser.get_value(
                 self.configuration, ["data", "exploration", "figsize", "width"]

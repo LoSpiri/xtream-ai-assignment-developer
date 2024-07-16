@@ -101,7 +101,7 @@
             "func": ["log"]
         },
         "optuna_tuning": {
-            "enabled": true,
+            "enabled": false,
             "metric": "mean_absolute_error",
             "nTrials": 100,
             "direction": "minimize",
