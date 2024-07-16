@@ -1,12 +1,13 @@
 import argparse
 import logging
 from pathlib import Path
-from src.deploy.webserver import WebServer
+from src.deploy.app import create_app
 from src.model.model_trainer import ModelTrainer
 from src.const.path import CONFIG_FOLDER
+from src.utils.config import ConfigParser
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(description="Train the model.")
     parser.add_argument(
         "-c",
@@ -18,18 +19,25 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     logging.basicConfig(
-        level=logging.INFO,  # Set the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",  # Format of the log messages
-        handlers=[
-            logging.StreamHandler()  # Output logs to the console
-        ],
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        handlers=[logging.StreamHandler()],
     )
     logger = logging.getLogger(__name__)
     logger.info(args.config_file)
     config_file = CONFIG_FOLDER.joinpath(args.config_file)
+    configuration = ConfigParser.retrieve_config(config_file)
 
-    model_trainer = ModelTrainer(config_file=config_file, logger=logger)
-    model_trainer.run()
+    if not (ConfigParser.get_value(
+        configuration, ["deploy", "enabled"]
+    ) and ConfigParser.get_value(
+        configuration, ["deploy", "model_name", "trainOnTheSpot"]
+    )):
+        model_trainer = ModelTrainer(config_file=config_file, logger=logger)
+        model_trainer.run()
 
-    webserver = WebServer(config_file=config_file, logger=logger)
-    webserver.run()
+    create_app(config_file=config_file, logger=logger, debug=True)
+
+
+if __name__ == "__main__":
+    main()

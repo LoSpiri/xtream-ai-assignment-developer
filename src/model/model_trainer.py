@@ -93,7 +93,7 @@ class ModelTrainer:
                 json.dump(self.configuration, json_file, indent=4)
             self.logger.info("Model saved successfully")
 
-    def _model_exploration(self) -> None:
+    def _model_exploration(self) -> pd.Series | None:
         if ConfigParser.get_value(
             self.configuration, ["model", "exploration", "gof", "enabled"]
         ):
@@ -102,7 +102,7 @@ class ModelTrainer:
                 self.y_test, self.pred, self.model_epoch_folder.joinpath("gof.png")
             )
 
-    def transformation(self, data) -> None:
+    def transformation(self, data) -> pd.Series:
         if ConfigParser.get_value(
             self.configuration, ["model", "transformation", "enabled"]
         ):
@@ -118,8 +118,9 @@ class ModelTrainer:
                     return TRANSFORMATIONS[transformation]["func"](data)
         else:
             return data
+        return pd.Series([])
 
-    def inverse_transformation(self, data) -> None:
+    def inverse_transformation(self, data) -> pd.Series:
         if ConfigParser.get_value(
             self.configuration, ["model", "transformation", "enabled"]
         ):
@@ -137,6 +138,7 @@ class ModelTrainer:
                     )
         else:
             return data
+        return pd.Series([])
 
     def _tuning(self, model_name: str, model_params: dict) -> dict:
         self.logger.info("Tuning model...")
@@ -154,18 +156,21 @@ class ModelTrainer:
                 self.configuration, ["model", "optuna_tuning", "metric"]
             )
         ]
-        objective_with_data = functools.partial(
-            OptunaUtils.objective,
-            x_train_og=self.x_train,
-            y_train_og=self.y_train,
-            test_size=test_size,
-            random_state=random_state,
-            metric=metric,
-            model_name=model_name,
-            model_params=model_params,
-            hyperparams=hyperparams,
-            logger=self.logger,
-        )
+
+        def objective_with_data(trial):
+            return OptunaUtils.objective(
+                trial=trial,
+                x_train_og=self.x_train,
+                y_train_og=self.y_train,
+                test_size=test_size,
+                random_state=random_state,
+                metric=metric,
+                model_name=model_name,
+                model_params=model_params,
+                hyperparams=hyperparams,
+                logger=self.logger,
+            )
+
         study = optuna.create_study(
             direction=ConfigParser.get_value(
                 self.configuration, ["model", "optuna_tuning", "direction"]
@@ -181,40 +186,3 @@ class ModelTrainer:
         best_params = study.best_params
         self.logger.info(f"Best hyperparameters found: {best_params}")
         return best_params
-    
-    def _objective(
-        self,
-        trial: optuna.trial.Trial,
-        x_train_og,
-        y_train_og,
-        test_size,
-        random_state,
-        metric,
-        model_name,
-        model_params,
-        hyperparams,
-        logger: Logger,
-    ) -> float:
-        params = LoadUtils.load_hyperparams(
-            trial=trial,
-            model_name=model_name,
-            model_constant_params=model_params,
-            hyperparams=hyperparams,
-            logger=logger,
-        )
-        logger.info(x_train_og.info())
-        logger.info(y_train_og.info())
-        y_train_og["price"] = y_train_og["price"].astype("int")
-        x_train, y_train, x_test, y_test = train_test_split(
-            x_train_og, y_train_og, test_size=test_size, random_state=random_state
-        )
-        model = ModelFactory.create_model(model_name, **params)
-        logger.info(f"Training model with hyperparameters: {model.get_params()}")
-        model.set_params(enable_categorical=True)
-        logger.info(x_train.info())
-        logger.info(x_test.info())
-        model.fit(x_train, y_train)
-        pred = model.predict(x_test)
-        evaluation = metric(y_test, pred)
-        logger.info(f"Evaluation for hyperparameters: {evaluation}")
-        return evaluation

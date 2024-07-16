@@ -1,9 +1,10 @@
 pandas
 matplotlib
-plotply
+plotly
 scikit-learn
 xgboost
 optuna
 kaleido
 joblib
 flask
+gunicorn

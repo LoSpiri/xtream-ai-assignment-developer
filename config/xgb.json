@@ -81,7 +81,6 @@
         "enabled": true,
         "type": "xgb_regression",
         "parameters": {
-            "enable_categorical": true,
             "random_state": 42
         },
         "evaluation": {
@@ -102,7 +101,7 @@
             "func": ["log"]
         },
         "optuna_tuning": {
-            "enabled": false,
+            "enabled": true,
             "metric": "mean_absolute_error",
             "nTrials": 100,
             "direction": "minimize",
@@ -146,8 +145,7 @@
         "enabled": true,
         "model_name": {
             "trainOnTheSpot": true,
-            "sameAsTraining": true,
-            "epoch": "1721058558"
+            "epoch": "1721160030"
         }
     }
 }

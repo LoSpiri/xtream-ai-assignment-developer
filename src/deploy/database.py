@@ -2,9 +2,11 @@ import json
 import sqlite3
 from datetime import datetime
 
+from src.const.path import DB_PATH
+
 
 class InteractionDatabase:
-    def __init__(self, db_path="interactions.db"):
+    def __init__(self, db_path=DB_PATH):
         self.db_path = db_path
         self._create_table()
 

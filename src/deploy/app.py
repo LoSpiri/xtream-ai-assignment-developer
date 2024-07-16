@@ -3,12 +3,13 @@ from logging import Logger
 from pathlib import Path
 from flask import Flask, g, request, jsonify
 
+from src.const.path import DB_PATH
 from src.deploy.database import InteractionDatabase
 from src.deploy.model_deploy import ModelDeploy
 
 
 app = Flask(__name__)
-interaction_db = InteractionDatabase()
+interaction_db = InteractionDatabase(db_path=DB_PATH)
 
 
 @app.route('/health', methods=['GET'])
@@ -55,4 +56,5 @@ def create_app(config_file: Path, logger: Logger, host='127.0.0.1', port=5000, d
     def log_request_response(response):
         interaction_db.log_interaction(request, response)
         return response
+
     app.run(host=host, port=port, debug=debug, use_reloader=False)

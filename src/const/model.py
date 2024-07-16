@@ -8,6 +8,6 @@ class ModelFactory:
         if model_type == "linear_regression":
             return LinearRegression(**kwargs)
         elif model_type == "xgb_regression":
-            return xgboost.XGBRegressor(**kwargs)
+            return xgboost.XGBRegressor(**kwargs, enable_categorical=True)
         else:
             raise ValueError(f"Unknown model type: {model_type}")
