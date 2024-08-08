@@ -8,5 +8,4 @@ kaleido
 joblib
 requests
 flask
-gunicorn
 pydantic
